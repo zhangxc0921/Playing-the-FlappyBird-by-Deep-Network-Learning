@@ -1,19 +1,17 @@
 from tqdm import tqdm
-
 import rl_utils
-from FlayppyBird import Qnet
 import torch
 import flappy_bird_gym
 import matplotlib.pyplot as plt
-
+from FlayppyBird import Qnet
 class runFlappyBird:
     def __init__(self, path, device):
         self.device = device
-        try:
-            self.q_net = torch.load(path)
-        except:
-            print("模型路径错误，请重新检查")
-            exit(0)
+        # try:
+        self.q_net = torch.load(path).to(device)
+        # except:
+        #     print("模型路径错误，请重新检查")
+        #     exit(0)
 
     def take_action(self, state):
         state = torch.tensor([state], dtype=torch.float).to(self.device)
@@ -22,7 +20,9 @@ class runFlappyBird:
 
 def evaluate(agent,evaluate_episode):
     rewards=0
-    with tqdm(range(evaluate_episode), desc="model_evaluate: %d" % i,colour='blue') as tbar:
+    env = flappy_bird_gym.make('FlappyBird-v0')
+    env.seed(0)
+    with tqdm(range(evaluate_episode), desc="model_evaluate",colour='blue') as tbar:
         for j in range(evaluate_episode):
             state = env.reset()
             env.render()
@@ -45,19 +45,21 @@ epoch_list = list(range(1, index + 1))
 rewards_list = []
 device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 evaluate_episode = 10
+# device=torch.device("cpu")
 ######### 参数 ##########
 
 if __name__ == '__main__':
     env = flappy_bird_gym.make('FlappyBird-v0')
     env.seed(0)
     # for i in range(index):
-    for i in [6]:
-        path = f"./model4/2023-02-17_q_net_{i}.pth"
+    for i in [193]:
+        path = f"./2023-02-17_q_net_{i}.pth"
         agent = runFlappyBird(path, device)
         rewards =evaluate(agent,evaluate_episode)
         rewards_list.append(rewards)
     env.close()
     rewards_list = rl_utils.moving_average(rewards_list, 9)
+    epoch_list=list(range(len(rewards_list)))
     plt.plot(epoch_list, rewards_list)
     plt.xlabel('Episodes')
     plt.ylabel('Returns')

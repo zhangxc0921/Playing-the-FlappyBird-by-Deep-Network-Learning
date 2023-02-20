@@ -2,7 +2,6 @@ import random
 import gym
 import numpy as np
 import collections
-from evaluate import evaluate
 import pygame.time
 from tqdm import tqdm
 import torch
@@ -126,7 +125,7 @@ if __name__ == '__main__':
     q_net_path = f"./model2/2023-02-16_q_net_{index}.pth"
     buffer_path = f"./buffer2/2023-02-16_buffer_{index}"
     load = True
-    save = True
+    save = False
     ######### 加载参数 ##########
 
     ######### 初始化参数 ##########
@@ -135,9 +134,9 @@ if __name__ == '__main__':
     np.random.seed(0)
     env.seed(0)
     torch.manual_seed(0)
-    lr = 2e-2
-    num_episodes = 2500
-    num_epoch = 50
+    lr = 2e-3
+    num_episodes = 1
+    num_epoch = 1
     hidden_dim = 64
     gamma = 0.96
     epsilon = 0.03
@@ -169,7 +168,7 @@ if __name__ == '__main__':
                     action = agent.take_action(obs)
                     next_obs, reward, done, _ = env.step(action)
                     env.render()
-                    # clock.tick(30)
+                    clock.tick(30)
                     replaybuffer.add(obs, action, reward, next_obs, done)
                     rewards += reward
                     obs = next_obs
@@ -197,6 +196,7 @@ if __name__ == '__main__':
                 pbar.update(1)
         # 评估模型的性能
         agent.modfiy_epsilon(0)
+        from evaluate import evaluate
         evaluate_rewards_list.append(evaluate(agent,evaluate_episode))
         agent.modfiy_epsilon(epsilon)
         # 每个epoch的模型保存起来
@@ -211,6 +211,7 @@ if __name__ == '__main__':
     plt.title('DQN on Flappy-Bird by training')
     plt.show()
 
+    episodes_list=list(range(len(evaluate_rewards_list)))
     plt.plot(episodes_list, evaluate_rewards_list)
     plt.xlabel('Episodes')
     plt.ylabel('Returns')
